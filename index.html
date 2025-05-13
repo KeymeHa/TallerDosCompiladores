@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analizador</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <nav class="bg-blue-600 text-white px-6 py-4 shadow-md">
+    <h1 class="text-2xl font-bold">Analizador de Código</h1>
+  </nav>
+
+  <div class="p-6 space-y-6">
+
+    <textarea 
+    id="inputQuery"
+    class="w-full h-32 p-4 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" 
+    placeholder="Ingrese query aquí"
+    ></textarea>
+
+    <div class="flex space-x-4">
+        <button id="btnAnalizar" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Analizar</button>
+        <button id="btnLimpiar" class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition">Limpiar</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="text-xl font-semibold mb-2">Analizador Léxico</h2>
+        <div id="lexicoResultado" class="text-gray-700"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="text-xl font-semibold mb-2">Analizador Sintáctico</h2>
+        <div id="sintacticoResultado" class="text-gray-700"></div>
+      </div>
+    </div>
+
+    <div class="bg-black text-green-400 p-4 rounded shadow mt-6 font-mono text-sm">
+      <h3 class="text-white font-semibold mb-2">Consola</h3>
+      <div id="consolaResultado"></div>
+    </div>
+
+  </div>
+
+ <script defer src="script.js"></script>
+
+</body>
+</html>
