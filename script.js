@@ -321,6 +321,10 @@ function analizador(texto_in)
     if(error != ""){
         errores = `⚠️ \n ${error}`;
     }
+    else
+    {
+         errores = ``;
+    }
 
     return tab_lex;
 
