@@ -6,6 +6,7 @@ DELETE FROM nombre_tabla WHERE nombre = "kevin"
 DELETE FROM nombre_tabla WHERE "nombre" = "kevin"
 DELETE FROM nombre_tabla WHERE "nombre" = 'kevin'
 DELETE FROM nombre_tabla WHERE 'nombre' = "kevin"
+DELETE FROM nombre_tabla WHERE nombre <> 'kevin';
 
 
 -------------------------------------------------------------------------------------------
@@ -17,7 +18,6 @@ PENDING
 DELETE FROM nombre_tabla WHERE id IN (1,2,3)
 DELETE FROM nombre_tabla WHERE id IN(1,2,3)
 DELETE FROM nombre_tabla WHERE id IN (1,2,3) AND nombre = "kevin"
-DELETE FROM nombre_tabla WHERE nombre <> 'kevin';
 DELETE FROM nombre_tabla WHERE id IN (SELECT id FROM usuario WHERE nombre = 'kevin');
 
 IC	-> <<if>>    <<cond>>   <<then>>      CSI     SINO   <<ENDIF>> 
@@ -33,7 +33,7 @@ QUERY ->   <<DELETE>>  		 <<FROM>>    		NAME     		 CLAUSE
 NAME  ->   <<nombre>> 	  |   SYMBOL 		  <<nombre>> 		 SYMBOL   |		<<num>>	  
 CLAUSE->   	 SYMBOL 	  |	 <<WHERE>> 	         MORE      
 SYMBOL->      λ     	  |     "     	|          '          |     =	  |		  AND		|      OR 		|	;    | <    |   >
-COLUMN->     NAME		      SYMBOL       	    NAME	      |  SYMBOL 		COLUMN     	|     NAME     	|  NAME SYMBOL SYMBOL NAME
+COLUMN->     NAME		      SYMBOL       	    NAME	      |  SYMBOL 		COLUMN     	|     NAME     	|  MORE
 MORE  ->    SYMBOL        |   SYMBOL           COLUMN            MORE    
 
 
