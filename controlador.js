@@ -1,4 +1,4 @@
-    let texto = "DELETE FROM \"USUARIOS\" WHERE i= 2;";
+
     texto = texto.trim();
 
     function stringToArray(texto) {
@@ -242,12 +242,15 @@
                             {
                                 concat += arrayDeCaracteres[1]
                                 count_string++;
+                                column[0] = true;
                                 tab_lex.push(`\(str,${concat}\)`);
                             }
                             else if(arrayDeCaracteres[1] === "=")
                             {
                                 count_string++;
                                 tab_lex.push(`\(str,${concat}\)`);
+                                column[0] = true;
+                                column[1] = true;
                                 tab_lex.push(`\(ASIG,\=\)`);
                             }
                             else
@@ -258,7 +261,9 @@
                         else
                         {
                             //se soluciona realizando las 3 validaciones
-                            error = mensaje + `<<string>> o =`;
+                            error = !column[0] ? mensaje + "<<string>>": ""; 
+                            error = !column[1] ? mensaje + `=`: "";
+                            error = !column[2] ? mensaje + `valor`: "";
                         }
                     }
                     else
@@ -292,3 +297,5 @@
     console.log("sym:"+count_simbol);
     console.log("str:"+count_string);
     console.log("int:"+count_number);
+
+    console.log(column)

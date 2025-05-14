@@ -1,50 +1,104 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analizador</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <title>Analizador de Código</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        header {
+            background-color: #1976D2;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            font-size: 16px;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #btnAnalizar {
+            background-color: #1976D2;
+            color: white;
+        }
+
+        #btnLimpiar {
+            background-color: #BDBDBD;
+            color: black;
+        }
+
+        .section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .section h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        #consola {
+            background-color: black;
+            color: white;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            border-radius: 5px;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
+<body>
 
-  <nav class="bg-blue-600 text-white px-6 py-4 shadow-md">
-    <h1 class="text-2xl font-bold">Analizador de Código</h1>
-  </nav>
+<header>Analizador de Código</header>
 
-  <div class="p-6 space-y-6">
+<div class="container">
+    <textarea id="entrada" placeholder="Escribe una sentencia DELETE..."></textarea>
+    <br>
+    <button id="btnAnalizar">Analizar</button>
+    <button id="btnLimpiar">Limpiar</button>
 
-    <textarea 
-    id="inputQuery"
-    class="w-full h-32 p-4 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" 
-    placeholder="Ingrese query aquí"
-    ></textarea>
-
-    <div class="flex space-x-4">
-        <button id="btnAnalizar" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">Analizar</button>
-        <button id="btnLimpiar" class="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition">Limpiar</button>
+    <div class="section">
+        <h3>Analizador Léxico</h3>
+        <div id="lexico"></div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="text-xl font-semibold mb-2">Analizador Léxico</h2>
-        <div id="lexicoResultado" class="text-gray-700"></div>
-      </div>
-
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="text-xl font-semibold mb-2">Analizador Sintáctico</h2>
-        <div id="sintacticoResultado" class="text-gray-700"></div>
-      </div>
+    <div class="section">
+        <h3>Analizador Sintáctico</h3>
+        <div id="sintactico"></div>
     </div>
 
-    <div class="bg-black text-green-400 p-4 rounded shadow mt-6 font-mono text-sm">
-      <h3 class="text-white font-semibold mb-2">Consola</h3>
-      <div id="consolaResultado"></div>
-    </div>
+    <div id="consola">Consola</div>
+</div>
 
-  </div>
-
- <script defer src="script.js"></script>
-
+<script src="script.js"></script>
 </body>
 </html>
