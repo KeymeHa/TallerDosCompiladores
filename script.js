@@ -1,4 +1,19 @@
 var errores = "";
+var op_symb = ["=","<>","!=",">=","<=",">","<"];
+var st_rev = [ "ABORT","ACCESS","ACTION","ADD","AGGREGATE","ALTER","ANALYSE","ANALYZE","AND","ANY","ARRAY","AS","ASC",
+                    "ASYMMETRIC","AT","AUTHORIZATION","BACKUP","BEFORE","BEGIN","BETWEEN","BIGINT","BINARY","BOTH","BY","CASCADE",
+                    "CASE","CAST","CHECK","COLLATE","COLUMN","CONCURRENTLY","CONSTRAINT","CREATE","CROSS","CURRENT","CURRENT_DATE","CURRENT_ROLE",
+                    "CURRENT_TIME","CURRENT_TIMESTAMP","CURRENT_USER","DEFAULT","DEFERRABLE","DEFERRED","DELETE","DESC","DISTINCT","DO","ELSE","END","EXCEPT",
+                    "EXCLUDE","EXISTS","EXPLAIN","FETCH","FOR","FOREIGN","FROM","FULL","GRANT","GROUP","HAVING","ILIKE","IN","INITIALLY","INNER","INSERT","INTERSECT",
+                    "INTO","IS","ISNULL","JOIN","LEADING","LEFT","LIKE","LIMIT","LISTEN","LOAD","LOCAL","LOCK","MATCH","MINUS","NATURAL","NOT","NOTNULL","NULL","OFFSET",
+                    "ON","ONLY","OR","ORDER","OUTER","OVER","OVERLAPS","PLACING","PRIMARY","REFERENCES","RETURNING","RIGHT","ROLLBACK","ROW","ROWS","SELECT","SESSION_USER",
+                    "SET","TABLE","TABLESAMPLE","THEN","TO","TRAILING","TRANSACTION","TRIGGER","UNION","UNIQUE","USER","USING","VERBOSE","WHEN","WHERE","WITH","WITHOUT" ];
+//contadores
+var count_res = 0;
+var count_simbol = 0;
+var count_string = 0;
+var count_number = 0;
+          
 
 document.addEventListener("DOMContentLoaded", () => {
   const textarea = document.getElementById("inputQuery");
@@ -13,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (texto === "") {
       consolaResultado.textContent = "⚠️ No hay datos para analizar.";
     } else {
-      let arr = analizador(texto);       
+      let arr = analizadorlexico(texto);       
       if(arr.length > 0)
       {
         document.getElementById('tablaLexicoCuerpo').innerHTML = '';
@@ -45,304 +60,123 @@ function agregarFilaLexico(token, tipo, linea, valido = true) {
   document.getElementById('tablaLexicoCuerpo').appendChild(fila);
 }
 
-function analizador(texto_in)
+function analizadorlexico(texto_in)
 {
-    let texto = texto_in.trim();  
-    let arrayDeCaracteres = stringToArray(texto);
-    let tam = arrayDeCaracteres.length;
-    let st_rev = [ "ABORT","ACCESS","ACTION","ADD","AGGREGATE","ALTER","ANALYSE","ANALYZE","AND","ANY","ARRAY","AS","ASC",
-                    "ASYMMETRIC","AT","AUTHORIZATION","BACKUP","BEFORE","BEGIN","BETWEEN","BIGINT","BINARY","BOTH","BY","CASCADE",
-                    "CASE","CAST","CHECK","COLLATE","COLUMN","CONCURRENTLY","CONSTRAINT","CREATE","CROSS","CURRENT","CURRENT_DATE","CURRENT_ROLE",
-                    "CURRENT_TIME","CURRENT_TIMESTAMP","CURRENT_USER","DEFAULT","DEFERRABLE","DEFERRED","DELETE","DESC","DISTINCT","DO","ELSE","END","EXCEPT",
-                    "EXCLUDE","EXISTS","EXPLAIN","FETCH","FOR","FOREIGN","FROM","FULL","GRANT","GROUP","HAVING","ILIKE","IN","INITIALLY","INNER","INSERT","INTERSECT",
-                    "INTO","IS","ISNULL","JOIN","LEADING","LEFT","LIKE","LIMIT","LISTEN","LOAD","LOCAL","LOCK","MATCH","MINUS","NATURAL","NOT","NOTNULL","NULL","OFFSET",
-                    "ON","ONLY","OR","ORDER","OUTER","OVER","OVERLAPS","PLACING","PRIMARY","REFERENCES","RETURNING","RIGHT","ROLLBACK","ROW","ROWS","SELECT","SESSION_USER",
-                    "SET","TABLE","TABLESAMPLE","THEN","TO","TRAILING","TRANSACTION","TRIGGER","UNION","UNIQUE","USER","USING","VERBOSE","WHEN","WHERE","WITH","WITHOUT" ];
-    let arr = [];
-    let tab_lex = [];
-    let concat = "";
-    let op_log = ["AND","OR"];
-    let op_symb = ["=","<>","!=",">=","<=",">","<"];
+  //variables y otros
+  let texto = texto_in.trim();  
+  let arrChart = stringToArray(texto);
+  let concat = ""; 
+  let result_regex;
+  //pibotes
+  let sim_agrup;
+  let char_pibot;
+  //controles
+  let val_agrup = [false,false,false];
+  //contadores
+  count_res = 0;
+  count_simbol = 0;
+  count_string = 0;
+  count_number = 0;
+  //arrays
+  let arr = [];
+  let tab_lex = [];
 
-    for (var i = 0; i < tam; i++) {
-    if(arrayDeCaracteres[i] != " ")
+  for (let i = 0; i < arrChart.length; i++) 
+  {
+    //es string concatene
+    result_regex = validar_regex(arrChart[i]);
+
+    if(result_regex != "b" && result_regex != "c" && result_regex != "a" && result_regex != "k" && result_regex != "l" )
     {
-        concat += arrayDeCaracteres[i];
-    }
-    else{
+      if(arrChart[i] == " ")
+      {
         arr.push(concat);
-        concat = "";
-    }
-    }
-    arr.push(concat);
-    concat = "";
-    let count = arr.length;
-    let pib = 0;
-    let esValido = true; 
-    let count_res = 0;
-    let count_tb = 0;
-    let count_simbol = 0;
-    let count_string = 0;
-    let count_number = 0;
-    let error = "" ;
-    let mensaje = "ERROR: Se esperaba un: " ;
-    let sw_cond = false;
-    let regex;
-    let delete_query = [false,false,false];
-    let column = [false,false,false];
-    /* valTabla
-    1) cuenta con una comilla doble al inicio?
-    2) cuenta con una letra al inicio?
-    3) cuenta con una comilla al final?
-    4) cuenta con ; al final?
-    */
-    let valTabla = [false,false,false,false];
-
-    while(count > 0 && esValido )
-    {
-        switch (pib) {
-        case 0:
-            regex = /^DELETE$/;
-            if(regex.test(arr[pib])){
-                count_res++;
-                tab_lex.push("id%DELETE%"+count_res);
-                delete_query[pib] = true;
-            }
-            else
-            {
-                error = mensaje + "DELETE";
-            }
-            break;
-        case 1:
-            regex = /^FROM$/;
-            if(regex.test(arr[pib])){ count_res++; tab_lex.push("id%FROM%"+count_res);delete_query[pib] = true;}
-            else{error = mensaje + "FROM";}
-            break;
-        case 2:
-            let arrChart = stringToArray(arr[pib]);
-            concat = "";
-            for (let i = 0; i < arrChart.length; i++) 
-            {
-                if(i == 0 && ( arrChart[i] == "\"" || arrChart[i] == "\'" ) )
-                {
-                    count_simbol++;
-                    tab_lex.push(`AGRUP%${arrChart[0]}%${count_simbol}`);
-                    if(arrChart[i] == "\""){valTabla[0] = true;}
-                    else{error = `${mensaje} \"`;}
-                }
-                else
-                {
-                    regex = !valTabla[1] ? /^[a-zA-Z]$/ : /^[a-zA-Z0-9_]+$/ ;
-
-
-                    if(!valTabla[1])
-                    {
-                        if( regex.test(arrChart[i]) )
-                        {
-                            valTabla[1] = true;
-                            concat += arrChart[i];
-                        }
-                        else
-                        {
-                            error = `\nCaracteres invalidos en el nombre de la tabla -> ${arr[pib]}.`;
-                        }
-                    }
-                    else if(!valTabla[3])
-                    {
-                        if( regex.test(arrChart[i]) && !valTabla[2] )
-                        {
-                            valTabla[1] = true;
-                            concat += arrChart[i];
-                        }
-                        else if(arrChart[i] == ";") 
-                        {
-                            valTabla[3] = true;
-                        }
-                        else if(arrChart[i] == "\"")
-                        {
-                            valTabla[2] = true;
-                        }
-                        else
-                        {
-                            error += `\nCaracteres invalidos en el nombre de la tabla -> ${arr[pib]}.`;
-                        }
-                    }
-                    else
-                    {
-                        error += `\nCaracteres invalidos en el nombre de la tabla -> ${arr[pib]}.`;
-                    }
-                }
-            }
-
-            if(concat != "")
-            {
-                count_tb++;
-                tab_lex.push(`TABLE%${concat}%${count_tb}`);
-                delete_query[2] = true;
-                regex = /^\W$/ ;
-                if(valTabla[2])
-                {
-                    count_simbol++;
-                    tab_lex.push(`AGRUP%\"%${count_simbol}`);
-                }
-                if(valTabla[3])
-                {
-                    count_simbol++;
-                    tab_lex.push(`LIM%;%${count_simbol}`);
-                }
-                error += st_rev.includes(arr[pib]) ? `\nCaracteres invalidos en el nombre de la tabla -> ${arr[pib]}.`: "" ;
-            }
-
-            error += valTabla[0] != valTabla[2] ? `${mensaje} \"` : "";
-
-            break;
-        case 3:
-            if(esValido)
-            {
-                if(!valTabla[3])
-                {
-                    regex = /^WHERE$/;
-                    esValido = regex.test(arr[pib]);
-                    valTabla[3] = true;
-                    if(esValido){
-                        count_res++;
-                        tab_lex.push("id%WHERE%"+count_res);
-                        sw_cond = true;
-                    }
-                    else if(arr[pib] == ";")
-                    {
-                        count_res++;
-                        tab_lex.push("DELIM%\;%"+count_res);
-                    }
-                    else{
-                        error = "\n"+mensaje + "WHERE o un \";\" ";
-                    }
-                }
-                else
-                {
-
-                }
-            }
-            break;
-        default:
-            if(esValido)
-            {
-                tam = arr[pib].length;
-                
-                if(tam == 1)
-                {
-                    regex = /^[a-zA-Z]$/;
-                    esValido = regex.test(arr[pib]);
-                    if(esValido)
-                    {
-                        if(!st_rev.includes(arr[pib]))
-                        {
-                            count_string++;
-                            tab_lex.push(`str%${arr[pib]}%${count_string}`);
-                        }
-                        else
-                        {
-                            error = "\n"+mensaje + `<<string>>, NO la palabra reservada: ${arr[pib]} `;
-                        }
-                    }
-                    else
-                    {
-                        error = "\n"+mensaje + `<<string>>`;
-                    }
-                }
-                else
-                {
-                    concat = "";
-                    arrayDeCaracteres = stringToArray(arr[pib]);
-                    if(tam == 2)
-                    {
-                        regex = /^[a-zA-Z]$/;
-                        esValido = regex.test(arrayDeCaracteres[0]);
-                        if(esValido)
-                        {
-                            if(!st_rev.includes(arrayDeCaracteres[0]))
-                            {
-                                concat += arrayDeCaracteres[0]
-                            }
-                            else
-                            {
-                                error = "\n"+mensaje + `<<string>>, NO la palabra reservada: ${arrayDeCaracteres[0]} `;
-                            }
-                            
-                            regex = /^[a-zA-Z]$/;
-                            if(regex.test(arrayDeCaracteres[1]))
-                            {
-                                concat += arrayDeCaracteres[1]
-                                count_string++;
-                                column[0] = true;
-                                tab_lex.push(`str%${concat}%${count_string}`);
-                            }
-                            else if(arrayDeCaracteres[1] === "=")
-                            {
-                                count_string++;
-                                tab_lex.push(`str%${concat}%${count_string}`);
-                                column[0] = true;
-                                column[1] = true;
-                                tab_lex.push(`ASIG%\=%${count_simbol}`);
-                            }
-                            else
-                            {
-                                 error = "\n"+mensaje + `=`;
-                            }
-                        }
-                        else
-                        {
-                            //se soluciona realizando las 3 validaciones
-                            error += !column[0] ? `\n ${mensaje} <<string>>`: ""; 
-                            error += !column[1] ? `\n ${mensaje} =`: "";
-                            error += !column[2] ? `\n ${mensaje} valor`: "";
-                        }
-                    }
-                    else
-                    {
-                        
-                    }
-                }
-            }
-            break;
-        }
-        pib++;
-        count--; 
-    }
-
-    if(sw_cond && arr.length <= 4 )
-    {
-        errores = "Se esperaba al menos una condición despues del WHERE ";   
-    }
-
-    error += !delete_query[1] ? `\n ${mensaje} FROM `: "";
-    error += delete_query[1] && !delete_query[2] ? `\n ${mensaje} un nombre de una tabla.`: "";
-
-    if(error != ""){
-        errores = `⚠️ \n ${error}`;
+        result_regex = validar_regex(concat)
+        tab_lex.push(crear_token(result_regex,concat,contar_regex(result_regex)));
+        concat = "";  
+      }
+      else
+      {
+        arr.push(arrChart[i]);
+        console.log(arrChart[i])
+        tab_lex.push(crear_token(result_regex,arrChart[i],contar_regex(result_regex)));
+      }
     }
     else
     {
-        errores = ``;
+      concat += arrChart[i];
     }
 
-    return tab_lex;
+    //es simbolo agreg
 
+  }//for
 
-    //console.log("--------------TABLA------------\n");
-    //console.log(tab_lex);
-
-    
-    //console.log("\n--------------CONTADORES------------\n");
-    //console.log("id:"+count_res);
-    //console.log("TABLE:"+count_tb);
-    //console.log("sym:"+count_simbol);
-    //console.log("str:"+count_string);
-    //console.log("int:"+count_number);
-
-    //console.log(column)
+  return tab_lex;
 
 }
+
+function validar_regex(texto) {
+  switch (true) {
+    case st_rev.includes(texto.toUpperCase()):
+      return "a";
+    case /[a-zA-Z]/.test(texto):
+      return "b";
+    case /[0-9]/.test(texto):
+      return "c";
+    case /\"/.test(texto):
+      return "d";
+    case /\'/.test(texto):
+      return "e";
+    case /\;/.test(texto):
+      return "f";
+    case /\=/.test(texto):
+      return "g";
+    case /\</.test(texto):
+      return "h";
+    case /\>/.test(texto):
+      return "i";
+    case /\!/.test(texto):
+      return "j";
+    case /\"?[a-zA-Z][a-zA-Z0-9_]+\"?/.test(texto):
+      return "k";
+    case /\'?[a-zA-Z][a-zA-Z0-9_]+\'?/.test(texto):
+      return "l";
+    default:
+      return "";
+  }
+}
+
+
+function contar_regex(op)
+{
+
+
+    switch(true)
+    {
+      case op == "a": count_res++; return count_res
+      case op == "b" || op == "k" || op == "l" : count_string++; return count_string
+      case op == "c": count_number++; return count_number
+      default: count_simbol++; return count_simbol;   
+    }
+}
+
+function crear_token(op, valor,count)
+{
+    let token = {
+      a: `RESERV%${valor}%${count}`,
+      b: `LITERAL%${valor}%${count}`,
+      c: `NÚMERO%${valor}%${count}`,
+      d: `AGRP%${valor}%${count}`,
+      e: `AGRUP%${valor}%${count}`,
+      f: `DELIM%${valor}%${count}`,
+      g: `ASIGN%${valor}%${count}`,
+      h: `COMPARA%${valor}%${count}`,
+      i: `COMPARA%${valor}%${count}`,
+      j: `OPERADORLOG%${valor}%${count}`,
+  };
+  return token[op];
+}
+
 
 
 
