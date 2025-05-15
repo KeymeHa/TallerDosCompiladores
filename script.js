@@ -83,36 +83,58 @@ function analizadorlexico(texto_in)
 
   for (let i = 0; i < arrChart.length; i++) 
   {
-    //es string concatene
     result_regex = validar_regex(arrChart[i]);
 
-    if(result_regex != "b" && result_regex != "c" && result_regex != "a" && result_regex != "k" && result_regex != "l" )
+    if( (result_regex == "d" || result_regex == "e") && !val_agrup[0] )
     {
-      if(arrChart[i] == " ")
+      console.log("primer comilla")
+      arr.push(arrChart[i]);
+      tab_lex.push(crear_token(result_regex,arrChart[i],contar_regex(result_regex)));
+      val_agrup[0] = true;
+      console.log("push");
+    }
+    else if ( result_regex == "b" || result_regex == "c" )
+    {
+      concat += arrChart[i];
+      console.log(concat);
+    }
+    else if(arrChart[i] != " ")
+    {
+      if(concat != "")
       {
         arr.push(concat);
-        result_regex = validar_regex(concat)
-        tab_lex.push(crear_token(result_regex,concat,contar_regex(result_regex)));
-        concat = "";  
+        tab_lex.push(crear_token(validar_regex(concat),concat,contar_regex(concat)));
+        console.log("push");
+        concat = ""; 
       }
-      else
-      {
-        arr.push(arrChart[i]);
-        console.log(arrChart[i])
-        tab_lex.push(crear_token(result_regex,arrChart[i],contar_regex(result_regex)));
-      }
+      val_agrup[0] = val_agrup[0] && result_regex == "d" || result_regex == "e"? false : val_agrup[0] ;
+      arr.push(arrChart[i]);
+      console.log(arrChart[i]);
+      tab_lex.push(crear_token(result_regex,arrChart[i],contar_regex(result_regex)));
+      console.log("push");
     }
     else
     {
-      concat += arrChart[i];
+      if(concat != "")
+      {
+        arr.push(concat);
+        console.log("distinto concat: "+ concat);
+        console.log("distinto char: "+ arrChart[i]);
+        console.log("push");
+        result_regex = validar_regex(concat)
+        tab_lex.push(crear_token(result_regex,concat,contar_regex(result_regex)));
+        concat = ""; 
+      }
     }
-
-    //es simbolo agreg
-
   }//for
 
-  return tab_lex;
+  if (concat !== "") {
+    arr.push(concat);
+    result_regex = validar_regex(concat);
+    tab_lex.push(crear_token(result_regex, concat, contar_regex(result_regex)));
+  }
 
+  return tab_lex;
 }
 
 function validar_regex(texto) {
