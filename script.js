@@ -13,6 +13,7 @@ var count_res = 0;
 var count_simbol = 0;
 var count_string = 0;
 var count_number = 0;
+var count_descon = 0;
           
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -67,9 +68,6 @@ function analizadorlexico(texto_in)
   let arrChart = stringToArray(texto);
   let concat = ""; 
   let result_regex;
-  //pibotes
-  let sim_agrup;
-  let char_pibot;
   //controles
   let val_agrup = [false,false,false];
   //contadores
@@ -77,6 +75,7 @@ function analizadorlexico(texto_in)
   count_simbol = 0;
   count_string = 0;
   count_number = 0;
+  count_descon = 0;
   //arrays
   let arr = [];
   let tab_lex = [];
@@ -84,19 +83,15 @@ function analizadorlexico(texto_in)
   for (let i = 0; i < arrChart.length; i++) 
   {
     result_regex = validar_regex(arrChart[i]);
-
     if( (result_regex == "d" || result_regex == "e") && !val_agrup[0] )
     {
-      console.log("primer comilla")
       arr.push(arrChart[i]);
       tab_lex.push(crear_token(result_regex,arrChart[i],contar_regex(result_regex)));
       val_agrup[0] = true;
-      console.log("push");
     }
     else if ( result_regex == "b" || result_regex == "c" )
     {
       concat += arrChart[i];
-      console.log(concat);
     }
     else if(arrChart[i] != " ")
     {
@@ -104,23 +99,17 @@ function analizadorlexico(texto_in)
       {
         arr.push(concat);
         tab_lex.push(crear_token(validar_regex(concat),concat,contar_regex(concat)));
-        console.log("push");
         concat = ""; 
       }
       val_agrup[0] = val_agrup[0] && result_regex == "d" || result_regex == "e"? false : val_agrup[0] ;
       arr.push(arrChart[i]);
-      console.log(arrChart[i]);
       tab_lex.push(crear_token(result_regex,arrChart[i],contar_regex(result_regex)));
-      console.log("push");
     }
     else
     {
       if(concat != "")
       {
         arr.push(concat);
-        console.log("distinto concat: "+ concat);
-        console.log("distinto char: "+ arrChart[i]);
-        console.log("push");
         result_regex = validar_regex(concat)
         tab_lex.push(crear_token(result_regex,concat,contar_regex(result_regex)));
         concat = ""; 
@@ -163,6 +152,10 @@ function validar_regex(texto) {
       return "k";
     case /\'?[a-zA-Z][a-zA-Z0-9_]+\'?/.test(texto):
       return "l";
+    case /[a-zA-Z0-9_]/.test(texto):
+      return "m";
+    case /\W/.test(texto):
+      return "n";
     default:
       return "";
   }
@@ -178,6 +171,7 @@ function contar_regex(op)
       case op == "a": count_res++; return count_res
       case op == "b" || op == "k" || op == "l" : count_string++; return count_string
       case op == "c": count_number++; return count_number
+      case op == "n": count_descon++; return count_descon
       default: count_simbol++; return count_simbol;   
     }
 }
@@ -186,7 +180,7 @@ function crear_token(op, valor,count)
 {
     let token = {
       a: `RESERV%${valor}%${count}`,
-      b: `LITERAL%${valor}%${count}`,
+      b: `ID%${valor}%${count}`,
       c: `NÚMERO%${valor}%${count}`,
       d: `AGRP%${valor}%${count}`,
       e: `AGRUP%${valor}%${count}`,
@@ -195,11 +189,11 @@ function crear_token(op, valor,count)
       h: `COMPARA%${valor}%${count}`,
       i: `COMPARA%${valor}%${count}`,
       j: `OPERADORLOG%${valor}%${count}`,
+      m: `ID%${valor}%${count}`,
+      n: `DESCONOCIDO%${valor}%${count}`,
   };
   return token[op];
 }
-
-
 
 
 
