@@ -200,6 +200,7 @@ function analizadorSintactico(arr)
 {
   let delete_syntax = [false, false, false];
   let condicional_syntax = [false, false, false, false, false];
+  let terminacion = false;
   let agrupacion = [false,false,false];
   let esValido = true; 
   let mensaje = "SE ESPERABA UN ";
@@ -210,7 +211,6 @@ function analizadorSintactico(arr)
 
   while( count > 0 && esValido)
   {
-    console.log(arr[pib]);
     //DELETE
     if(!delete_syntax[0])
     {
@@ -247,17 +247,16 @@ function analizadorSintactico(arr)
         }
         else if(!agrupacion[2])
         {
-          console.log(`pibote ${pibote}   arr[pib] ${arr[pib]}`)
           if(agrupacion[0] && agrupacion[1] && pibote == arr[pib] )
           {
             concat += arr[pib];
             agrupacion[2] = true;
             delete_syntax[2] = true;
+            terminacion = true;
           }
           else
           {
             esValido = false;
-            console.log("comilltas");
             mensaje = `${mensaje} ${error_comillas} ----> ${concat}`;
           }
         }
@@ -271,18 +270,17 @@ function analizadorSintactico(arr)
       else if( ( /[a-zA-Z]/.test(arr[pib]) && arr[pib].length == 1 ) || /[a-zA-Z][a-zA-Z0-9_]*/.test(arr[pib])   )
       {
         concat += arr[pib];
-        console.log(`array ${(arr.length-1)}   pib ${pib}`);
         agrupacion[1] = true;
         if( (arr.length - 1) == pib )
         {
           if(!agrupacion[0])
           {
             delete_syntax[2] = true;
+            terminacion = true;
           }
           else
           {
             esValido = false;
-            console.log("hola");
             mensaje = `${mensaje} ${error_comillas} ----> ${concat}`;
           }
         }
@@ -301,7 +299,26 @@ function analizadorSintactico(arr)
     }
     //WHERE
     else if(!condicional_syntax[0])
-    {}
+    {
+      
+      if(/WHERE/.test(arr[pib]))
+      {
+        terminacion = false;
+        concat += " "+arr[pib];
+        condicional_syntax[0] = true;
+      }
+      else if(/;/.test(arr[pib]))
+      {
+        concat += arr[pib];
+        terminacion = true;
+      }
+      else
+      {
+        esValido = false;
+        terminacion = false;
+        mensaje = `${mensaje} ; o una condición con WHERE despues de ----> ${concat}`;
+      }
+    }
     //COLUMNA
     else if(!condicional_syntax[1])
     {}
@@ -325,6 +342,17 @@ function analizadorSintactico(arr)
     mensaje = errorValidadorSintactico(pib) + " despues --------> " + concat;
     pib++;
   }
+
+  if(!terminacion)
+  {
+     if( !condicional_syntax.every(Boolean) )
+     {
+        esValido = false;
+        mensaje = `Se esperaba una condición correcta despues de ----> ${concat}`; 
+     }
+     
+  }
+
   if(esValido)
   {
     return `LA CONSULTA ES VALIDA.`; 
