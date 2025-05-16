@@ -28,20 +28,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const texto = textarea.value;
     if (texto === "") {
       consolaResultado.textContent = "⚠️ No hay datos para analizar.";
+      document.getElementById('tablaLexicoCuerpo').innerHTML = '';
     } else {
-      let arr = analizadorlexico(texto);       
+      const arr = analizadorlexico(texto);   
+      var arr_sintactico = [];    
+      var arrayDeCadenas = [];
       if(arr.length > 0)
       {
         document.getElementById('tablaLexicoCuerpo').innerHTML = '';
         for (let i = 0; i < arr.length; i++) 
         {
-            var arrayDeCadenas = arr[i].split('%');
-            console.log(arrayDeCadenas);
+            arrayDeCadenas = arr[i].split('%');
+            arr_sintactico.push(arrayDeCadenas[1]);
             agregarFilaLexico(arrayDeCadenas[1], arrayDeCadenas[0], arrayDeCadenas[2]);
         }
+        var arr_sin = analizadorSintactico(arr_sintactico);
       }
       consolaResultado.innerHTML = "";
-      consolaResultado.innerHTML = errores; 
+      consolaResultado.innerHTML = arr_sin; 
     }
   });
 });
@@ -50,8 +54,8 @@ function stringToArray(texto) {
     return texto.split('');
 }
 
-function agregarFilaLexico(token, tipo, linea, valido = true) {
-  const estadoClase = valido ? 'text-green-600' : 'text-red-600';
+function agregarFilaLexico(token, tipo, linea) {
+  const estadoClase = tipo != "DESCONOCIDO" ? 'text-green-600' : 'text-red-600';
   const fila = document.createElement('tr');
   fila.innerHTML = `
     <td class="border px-4 py-2 ${estadoClase}">${token}</td>
@@ -98,20 +102,19 @@ function analizadorlexico(texto_in)
       if(concat != "")
       {
         arr.push(concat);
-        tab_lex.push(crear_token(validar_regex(concat),concat,contar_regex(concat)));
+        tab_lex.push(crear_token(validar_regex(concat),concat,contar_regex(validar_regex(concat))));
         concat = ""; 
       }
       val_agrup[0] = val_agrup[0] && result_regex == "d" || result_regex == "e"? false : val_agrup[0] ;
       arr.push(arrChart[i]);
-      tab_lex.push(crear_token(result_regex,arrChart[i],contar_regex(result_regex)));
+      tab_lex.push(crear_token(validar_regex(arrChart[i]),arrChart[i],contar_regex(validar_regex(arrChart[i]))));
     }
     else
     {
       if(concat != "")
       {
         arr.push(concat);
-        result_regex = validar_regex(concat)
-        tab_lex.push(crear_token(result_regex,concat,contar_regex(result_regex)));
+        tab_lex.push(crear_token(validar_regex(concat),concat,contar_regex(validar_regex(concat))));
         concat = ""; 
       }
     }
@@ -119,8 +122,7 @@ function analizadorlexico(texto_in)
 
   if (concat !== "") {
     arr.push(concat);
-    result_regex = validar_regex(concat);
-    tab_lex.push(crear_token(result_regex, concat, contar_regex(result_regex)));
+    tab_lex.push(crear_token(validar_regex(concat), concat, contar_regex(validar_regex(concat))));
   }
 
   return tab_lex;
@@ -164,8 +166,6 @@ function validar_regex(texto) {
 
 function contar_regex(op)
 {
-
-
     switch(true)
     {
       case op == "a": count_res++; return count_res
@@ -196,16 +196,91 @@ function crear_token(op, valor,count)
 }
 
 
+function analizadorSintactico(arr)
+{
+  let delete_syntax = [false, false, false];
+  let condicional_syntax = [false, false, false, false, false];
+  let esValido = true; 
+  let mensaje = "SE ESPERABA UN ";
+  let count = arr.length;
+  let pib = 0;
+  let concat = "";
 
-function agregarFilaSintactico(regla, descripcion, estado) {
-  const estadoClase = estado.toLowerCase() === 'correcto' ? 'text-green-600' : 'text-red-600';
-  const fila = document.createElement('tr');
-  fila.innerHTML = `
-    <td class="border px-4 py-2">${regla}</td>
-    <td class="border px-4 py-2">${descripcion}</td>
-    <td class="border px-4 py-2 font-semibold ${estadoClase}">${estado}</td>
-  `;
-  document.getElementById('tablaSintacticoCuerpo').appendChild(fila);
+  while( count > 0 && esValido)
+  {
+    console.log(arr[pib]);
+    //DELETE
+    if(!delete_syntax[0])
+    {
+      concat += arr[pib];
+      if(!(/DELETE/.test(arr[pib])))
+      {
+        esValido = false;
+        mensaje = `${mensaje} DELETE EN ----> ${concat}`; 
+      }
+      delete_syntax[0] = true;
+    }
+    //FROM
+    else if(!delete_syntax[1])
+    {
+      concat += " "+arr[pib];
+      if(!(/FROM/.test(arr[pib])))
+      {
+        esValido = false;
+        mensaje = `${mensaje} FROM EN ----> ${concat}`; 
+      }
+      delete_syntax[1] = true;
+    }
+    //NOMBRE TABLA
+    else if(!delete_syntax[1])
+    {}
+    //WHERE
+    else if(!condicional_syntax[0])
+    {}
+    //COLUMNA
+    else if(!condicional_syntax[1])
+    {}
+    //SIMBOLO
+    else if(!condicional_syntax[2])
+    {}
+    //VALOR
+    else if(!condicional_syntax[3])
+    {}
+    //OPERADOR
+    else
+    {}
+
+    pib++;
+    count--; 
+  }
+  pib = 0;
+  while(pib < delete_syntax.length && esValido )
+  {
+    esValido = delete_syntax[pib];
+    mensaje = errorValidadorSintactico(pib) + " despues --------> " + concat;
+    pib++;
+  }
+  if(esValido)
+  {
+    return `${concat} ES VALIDO`; 
+  }
+  else
+  {
+    return mensaje;
+  } 
+
+}
+
+function errorValidadorSintactico(op)
+{
+  let mensaje = "SE ESPERABA UN ";
+    switch(op)
+    {
+      case 0: ; return `${mensaje} DELETE `
+      case 1: ; return `${mensaje} FROM `
+      case 2: ; return `${mensaje} nombre de una tabla `
+      default: ; return "" ;   
+    }
 }
 
 
@@ -232,7 +307,6 @@ document.getElementById('btnLimpiar').addEventListener('click', () => {
   document.getElementById('consolaResultado').innerHTML = '';
 });
 
-agregarFilaSintactico('DELETE → DELETE FROM tabla', 'Falta condición WHERE', 'Error');
 agregarFilaSemantico('"DEL3TE"', 'Palabra Reservada', '', 'Invalido');
 
 
