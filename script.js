@@ -200,10 +200,12 @@ function analizadorSintactico(arr)
 {
   let delete_syntax = [false, false, false];
   let condicional_syntax = [false, false, false, false, false];
+  let agrupacion = [false,false,false];
   let esValido = true; 
   let mensaje = "SE ESPERABA UN ";
   let count = arr.length;
   let pib = 0;
+  let pibote = "";
   let concat = "";
 
   while( count > 0 && esValido)
@@ -223,7 +225,7 @@ function analizadorSintactico(arr)
     //FROM
     else if(!delete_syntax[1])
     {
-      concat += " "+arr[pib];
+      concat += " "+arr[pib]+" ";
       if(!(/FROM/.test(arr[pib])))
       {
         esValido = false;
@@ -232,8 +234,71 @@ function analizadorSintactico(arr)
       delete_syntax[1] = true;
     }
     //NOMBRE TABLA
-    else if(!delete_syntax[1])
-    {}
+    else if(!delete_syntax[2])
+    {
+      let error_comillas = "unas comillas dobles para cerrar";
+      if(arr[pib] == "\"" )
+      {
+        if(!agrupacion[0])
+        {
+          agrupacion[0] = true;
+          concat += " "+arr[pib]; 
+          pibote = arr[pib];
+        }
+        else if(!agrupacion[2])
+        {
+          console.log(`pibote ${pibote}   arr[pib] ${arr[pib]}`)
+          if(agrupacion[0] && agrupacion[1] && pibote == arr[pib] )
+          {
+            concat += arr[pib];
+            agrupacion[2] = true;
+            delete_syntax[2] = true;
+          }
+          else
+          {
+            esValido = false;
+            console.log("comilltas");
+            mensaje = `${mensaje} ${error_comillas} ----> ${concat}`;
+          }
+        }
+        else
+        {
+          esValido = false;
+          mensaje = `ha ocurrido un error en la validación de los simbolos de agrupación en la tabla`;
+        }
+        
+      }
+      else if( ( /[a-zA-Z]/.test(arr[pib]) && arr[pib].length == 1 ) || /[a-zA-Z][a-zA-Z0-9_]*/.test(arr[pib])   )
+      {
+        concat += arr[pib];
+        console.log(`array ${(arr.length-1)}   pib ${pib}`);
+        agrupacion[1] = true;
+        if( (arr.length - 1) == pib )
+        {
+          if(!agrupacion[0])
+          {
+            delete_syntax[2] = true;
+          }
+          else
+          {
+            esValido = false;
+            console.log("hola");
+            mensaje = `${mensaje} ${error_comillas} ----> ${concat}`;
+          }
+        }
+      }
+      else if(arr[pib] == "\'")
+      {
+        esValido = false;
+        concat += " "+arr[pib];
+        mensaje = `${mensaje} unas comillas dobles en vez de \' comilla simple para el nombre de tabla valido ----> ${concat}`; 
+      }
+      else
+      {
+        esValido = false;
+        mensaje = `${mensaje} un nombre de tabla valido ----> ${concat}`; 
+      }
+    }
     //WHERE
     else if(!condicional_syntax[0])
     {}
@@ -262,7 +327,7 @@ function analizadorSintactico(arr)
   }
   if(esValido)
   {
-    return `${concat} ES VALIDO`; 
+    return `LA CONSULTA ES VALIDA.`; 
   }
   else
   {
