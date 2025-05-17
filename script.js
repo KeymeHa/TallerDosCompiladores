@@ -132,7 +132,7 @@ function validar_regex(texto) {
   switch (true) {
     case st_rev.includes(texto.toUpperCase()):
       return "a";
-    case /[a-zA-Z]/.test(texto):
+    case /[a-zA-Z_]/.test(texto):
       return "b";
     case /[0-9]/.test(texto):
       return "c";
@@ -198,8 +198,10 @@ function crear_token(op, valor,count)
 
 function analizadorSintactico(arr)
 {
+  //DELETE FROM TABLE
   let delete_syntax = [false, false, false];
-  let condicional_syntax = [false, false, false, false, false];
+  //WHERE COLUMNA SIMBOLO VALOR
+  let condicional_syntax = [false, false, false, false];
   let terminacion = false;
   let agrupacion = [false,false,false];
   let esValido = true; 
@@ -237,28 +239,30 @@ function analizadorSintactico(arr)
     else if(!delete_syntax[2])
     {
       let error_comillas = "unas comillas dobles para cerrar";
+      let error_nombre = "un nombre de tabla valido";
       if(arr[pib] == "\"" )
       {
-        if(!agrupacion[0])
+        if(agrupacion[0])
         {
-          agrupacion[0] = true;
-          concat += " "+arr[pib]; 
-          pibote = arr[pib];
-        }
-        else if(!agrupacion[2])
-        {
-          if(agrupacion[0] && agrupacion[1] && pibote == arr[pib] )
+          if(agrupacion[1] && pibote == arr[pib] )
           {
+            console.log("en las comillas")
             concat += arr[pib];
             agrupacion[2] = true;
             delete_syntax[2] = true;
-            terminacion = true;
+            //terminacion = true;
           }
           else
           {
             esValido = false;
             mensaje = `${mensaje} ${error_comillas} ----> ${concat}`;
           }
+        }
+        else if(!agrupacion[0] && !agrupacion[2])
+        {
+          agrupacion[0] = true;
+          //concat += " "+arr[pib]; 
+          pibote = arr[pib];
         }
         else
         {
@@ -273,16 +277,19 @@ function analizadorSintactico(arr)
         agrupacion[1] = true;
         if( (arr.length - 1) == pib )
         {
-          if(!agrupacion[0])
-          {
-            delete_syntax[2] = true;
-            terminacion = true;
-          }
-          else
+          if(agrupacion[0])
           {
             esValido = false;
             mensaje = `${mensaje} ${error_comillas} ----> ${concat}`;
           }
+          else
+          {
+            delete_syntax[2] = true;
+            terminacion = true;
+          }
+        }
+        else{
+          agrupacion[1] = true;
         }
       }
       else if(arr[pib] == "\'")
@@ -291,51 +298,147 @@ function analizadorSintactico(arr)
         concat += " "+arr[pib];
         mensaje = `${mensaje} unas comillas dobles en vez de \' comilla simple para el nombre de tabla valido ----> ${concat}`; 
       }
+      else if(arr[pib] == ";")
+      {
+        concat += arr[pib];
+        if(agrupacion[1])
+        {
+            terminacion = true;
+        }
+        else
+        {
+          esValido = false;
+          mensaje = `${mensaje} ${error_nombre} --> ${concat}`; 
+        }
+ 
+      }
       else
       {
         esValido = false;
-        mensaje = `${mensaje} un nombre de tabla valido ----> ${concat}`; 
+        mensaje = `${mensaje} ${error_nombre} ---> ${concat}`; 
       }
     }
     //WHERE
     else if(!condicional_syntax[0])
     {
-      
-      if(/WHERE/.test(arr[pib]))
+      concat += " "+arr[pib];
+      if(terminacion)
       {
-        terminacion = false;
-        concat += " "+arr[pib];
-        condicional_syntax[0] = true;
+        esValido = false;
+        mensaje = `${mensaje} DELETE despues de ----> ${concat}`; 
       }
-      else if(/;/.test(arr[pib]))
+      else
       {
-        concat += arr[pib];
-        terminacion = true;
+        if(/WHERE/.test(arr[pib]))
+        {
+          terminacion = false;
+          condicional_syntax[0] = true;
+        }
+        else if(/;/.test(arr[pib]))
+        {
+          terminacion = true;
+        }
+        else
+        {
+          esValido = false;
+          terminacion = false;
+          mensaje = `${mensaje} ; o una condición con WHERE despues de ----> ${concat} [COLUMNA] [SIMBOLO] [VALOR]`;
+        }
+      }
+
+    }
+    //COLUMNA
+    else if(!condicional_syntax[1])
+    {
+      let error_comillas = "unas comillas dobles para cerrar";
+      let error_nombre = "un nombre de columna valido";
+      agrupacion = [false,false,false];
+      if(arr[pib] == "\"" )
+      {
+        if(agrupacion[0])
+        {
+          if(agrupacion[1] && pibote == arr[pib] )
+          {
+            console.log("en las comillas")
+            concat += arr[pib];
+            agrupacion[2] = true;
+            condicional_syntax[1] = true;
+            //terminacion = true;
+          }
+          else
+          {
+            esValido = false;
+            mensaje = `${mensaje} ${error_comillas} ----> ${concat}`;
+          }
+        }
+        else if(!agrupacion[0] && !agrupacion[2])
+        {
+          agrupacion[0] = true;
+          //concat += " "+arr[pib]; 
+          pibote = arr[pib];
+        }
+        else
+        {
+          esValido = false;
+          mensaje = `ha ocurrido un error en la validación de los simbolos de agrupación en la columna`;
+        }
+        
+      }
+      else if( ( /[a-zA-Z]/.test(arr[pib]) && arr[pib].length == 1 ) || /[a-zA-Z][a-zA-Z0-9_]*/.test(arr[pib])   )
+      {
+        concat += " "+arr[pib];
+        agrupacion[1] = true;
+        if(agrupacion[0])
+        {
+          esValido = false;
+          mensaje = `${mensaje} ${error_comillas} ----> ${concat}`;
+        }
+        else
+        {
+          condicional_syntax[1] = true;
+        }
+      }
+      else if(arr[pib] == "\'")
+      {
+        esValido = false;
+        concat += " "+arr[pib];
+        mensaje = `${mensaje} unas comillas dobles en vez de \' comilla simple para el nombre de columna valido ----> ${concat}`; 
       }
       else
       {
         esValido = false;
-        terminacion = false;
-        mensaje = `${mensaje} ; o una condición con WHERE despues de ----> ${concat}`;
+        mensaje = `${mensaje} ${error_nombre} ---> ${concat}`; 
       }
     }
-    //COLUMNA
-    else if(!condicional_syntax[1])
-    {}
     //SIMBOLO
     else if(!condicional_syntax[2])
-    {}
+    {
+      concat += arr[pib];
+      pibote = arr[pib];
+      if(!(/\=/.test(arr[pib])))
+      {
+        esValido = false;
+        mensaje = `${mensaje} SIMBOLO EN ----> ${concat}`; 
+      }
+      condicional_syntax[2] = true;
+    }
     //VALOR
     else if(!condicional_syntax[3])
-    {}
+    {
+      concat += arr[pib];
+      condicional_syntax[3] = true;
+    }
     //OPERADOR
     else
-    {}
+    {
+      concat += arr[pib];
+    }
 
     pib++;
     count--; 
   }
   pib = 0;
+
   while(pib < delete_syntax.length && esValido )
   {
     esValido = delete_syntax[pib];
@@ -343,14 +446,14 @@ function analizadorSintactico(arr)
     pib++;
   }
 
-  if(!terminacion)
+  if(!terminacion && delete_syntax.every(Boolean) )
   {
+    console.log(condicional_syntax);
      if( !condicional_syntax.every(Boolean) )
      {
         esValido = false;
-        mensaje = `Se esperaba una condición correcta despues de ----> ${concat}`; 
-     }
-     
+        mensaje = `Se esperaba una condición correcta despues de ----> ${concat}  --------- \[COLUMNA\] \[SIMBOLO\] \[VALOR\]`; 
+     }     
   }
 
   if(esValido)
@@ -388,7 +491,6 @@ function agregarFilaSemantico(simbolo, tipo, valor, estado) {
     <td class="border px-4 py-2">${valor}</td>
     <td class="border px-4 py-2 font-semibold ${estadoClase}">${estado}</td>
   `;
-  document.getElementById('tablaSemanticoCuerpo').appendChild(fila);
 }
 
 
@@ -396,7 +498,6 @@ document.getElementById('btnLimpiar').addEventListener('click', () => {
   document.getElementById('inputQuery').value = '';
   document.getElementById('tablaLexicoCuerpo').innerHTML = '';
   document.getElementById('tablaSintacticoCuerpo').innerHTML = '';
-  document.getElementById('tablaSemanticoCuerpo').innerHTML = '';
   document.getElementById('consolaResultado').innerHTML = '';
 });
 
