@@ -518,7 +518,7 @@ function analizadorSintactico(arr)
   }
   if(!terminacion && delete_syntax.every(Boolean) )
   {
-     if( !condicional_syntax.every(Boolean) )
+     if( condicional_syntax[0] && (!condicional_syntax[1] || !condicional_syntax[2]) )
      {
         esValido = false;
         mensaje = `Se esperaba una condición correcta despues de ----> ${concat}  --------- \[COLUMNA\] \[SIMBOLO\] \[VALOR\]`; 
