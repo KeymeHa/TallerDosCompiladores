@@ -262,7 +262,7 @@ function analizadorSintactico(arr)
       }
       else if(/^[a-zA-Z]$/.test(arr[pib])  || /^[a-zA-Z][a-zA-Z0-9_]*$/.test(arr[pib]))
       {
-        if( st_rev.includes(arr[pib]) )
+        if( st_rev.includes(arr[pib].toUpperCase()) )
         {
            esValido = false;
            mensaje = `${mensaje} nombre valido, más no una palabra reservada ----> ${concat}`; 
@@ -365,7 +365,7 @@ function analizadorSintactico(arr)
       }
       else if(/^[a-zA-Z]$/.test(arr[pib])  || /^[a-zA-Z][a-zA-Z0-9_]*$/.test(arr[pib]))
       {
-        if(st_rev.includes(arr[pib]))
+        if(st_rev.includes(arr[pib].toUpperCase()))
         {
           esValido = false;
           mensaje = `${mensaje} nombre valido, más no una palabra reservada ----> ${concat}`; 
