@@ -74,6 +74,7 @@ function analizadorlexico(texto_in)
   let result_regex;
   //controles
   let val_agrup = [false,false,false];
+  let pibote = "";
   //contadores
   count_res = 0;
   count_simbol = 0;
@@ -203,12 +204,12 @@ function analizadorSintactico(arr)
   //WHERE COLUMNA SIMBOLO VALOR
   let condicional_syntax = [false, false, false, false];
   let terminacion = false;
-  let agrupacion = [false,false,false];
+  let agrupacion = [false ,false , false];
   let esValido = true; 
-  let mensaje = "SE ESPERABA UN ";
+  let mensaje = "-- Se esperaba un";
+  let err_com_dob = "comilla doble o existe una agrupación invalida en el nombre de la";
   let count = arr.length;
   let pib = 0;
-  let pibote = "";
   let concat = "";
 
   while( count > 0 && esValido)
@@ -247,17 +248,17 @@ function analizadorSintactico(arr)
           {
             agrupacion[2] = true;
             delete_syntax[2] = true;
+            
           }
           else
           {
             esValido = false;
-            mensaje = `${mensaje} comilla doble o existe una agrupación invalida en el nombre de la tabla ----> ${concat}`; 
+            mensaje = `ERR1 ${mensaje} ${err_com_dob} tabla ----> ${concat}`; 
           }
         }
         else
         {
           agrupacion[0] = true;
-          mensaje = `${mensaje} comilla doble o existe una agrupación invalida en el nombre de la tabla ----> ${concat}`; 
         }
       }
       else if(/^[a-zA-Z]$/.test(arr[pib])  || /^[a-zA-Z][a-zA-Z0-9_]*$/.test(arr[pib]))
@@ -265,7 +266,7 @@ function analizadorSintactico(arr)
         if( st_rev.includes(arr[pib].toUpperCase()) )
         {
            esValido = false;
-           mensaje = `${mensaje} nombre valido, más no una palabra reservada ----> ${concat}`; 
+           mensaje = `ERR3 ${mensaje} nombre valido, más no una palabra reservada ----> ${concat}`; 
         }
         else
         {
@@ -276,47 +277,54 @@ function analizadorSintactico(arr)
             if( agrupacion[0] == agrupacion[2]  )
             {
               delete_syntax[2] = true;
+              
             }
           }
           else
           {
+            if( agrupacion[0] == agrupacion[2]  )
+            {
+              delete_syntax[2] = true;
+              
+            }
             agrupacion[1] = true;
-            delete_syntax[2] = true;
-
+            
           }
         }
       }
       else if(arr[pib] == "\'")
       {
         esValido = false;
-        mensaje = `${mensaje} comilla doble para agrupar el nombre de la tabla ----> ${concat}`; 
+        mensaje = `ERR4 ${mensaje} comilla doble para agrupar el nombre de la tabla ----> ${concat}`; 
       }
       else if(arr[pib] == ";")
       {
         terminacion = true;
-        debugger;
+        
         if(agrupacion[1] && agrupacion[0] == agrupacion[2])
         {
           delete_syntax[2] = true;
+          
         }
         else
         {
           esValido = false;
-          mensaje = `${mensaje} caracter valido para el nombre de la tabla ----> ${concat}`; 
+          mensaje = `ERR5 ${mensaje} caracter valido para el nombre de la tabla ----> ${concat}`; 
         }
 
       }
       else
       {
         esValido = false;
-        mensaje = `${mensaje} caracter valido para el nombre de la tabla ----> ${concat}`; 
+        mensaje = `ERR6 ${mensaje} caracter valido para el nombre de la tabla ----> ${concat}`; 
       }
+      
     }
     //WHERE
     else if(!condicional_syntax[0])
     {
       concat += " "+arr[pib] + " " ;
-      debugger;
+      
       if(/WHERE/.test(arr[pib]))
       {
         terminacion = false;
@@ -334,7 +342,7 @@ function analizadorSintactico(arr)
       {
         esValido = false;
         terminacion = false;
-        mensaje = `${mensaje} ; o una condición con WHERE despues de ----> ${concat} [COLUMNA] [SIMBOLO] [VALOR]`;
+        mensaje = `ERR7 ${mensaje} ; o una condición con WHERE despues de ----> ${concat} [COLUMNA] [SIMBOLO] [VALOR]`;
       }
 
     }
@@ -354,13 +362,12 @@ function analizadorSintactico(arr)
           else
           {
             esValido = false;
-            mensaje = `${mensaje} comilla doble o existe una agrupación invalida en el nombre de la tabla ----> ${concat}`; 
+            mensaje = `ERR8 ${mensaje} ${err_com_dob} columna ----> ${concat}`; 
           }
         }
         else
         {
-          agrupacion[0] = true;
-          mensaje = `${mensaje} comilla doble o existe una agrupación invalida en el nombre de la tabla ----> ${concat}`; 
+          agrupacion[0] = true; 
         }
       }
       else if(/^[a-zA-Z]$/.test(arr[pib])  || /^[a-zA-Z][a-zA-Z0-9_]*$/.test(arr[pib]))
@@ -368,7 +375,7 @@ function analizadorSintactico(arr)
         if(st_rev.includes(arr[pib].toUpperCase()))
         {
           esValido = false;
-          mensaje = `${mensaje} nombre valido, más no una palabra reservada ----> ${concat}`; 
+          mensaje = `ERR10 ${mensaje} nombre valido, más no una palabra reservada ----> ${concat}`; 
         }
         else
         {
@@ -391,31 +398,32 @@ function analizadorSintactico(arr)
       else if(arr[pib] == "\'")
       {
         esValido = false;
-        mensaje = `${mensaje} comilla doble para agrupar el nombre de las columnas ----> ${concat}`; 
+        mensaje = `ERR11 ${mensaje} comilla doble para agrupar el nombre de las columnas ----> ${concat}`; 
       }
       else
       {
         esValido = false;
-        mensaje = `${mensaje} caracter valido para el nombre de la columna ----> ${concat}`; 
+        mensaje = `ERR12 ${mensaje} caracter valido para el nombre de la columna ----> ${concat}`; 
       }
     }
     //SIMBOLO
     else if(!condicional_syntax[2])
     {
       concat += " " + arr[pib] + " ";
-      pibote = arr[pib];
-      debugger;
+      pibote = arr[pib];      
       if(!(/\=/.test(arr[pib])))
       {
         agrupacion= [false,false,false];
         esValido = false;
-        mensaje = `${mensaje} SIMBOLO EN ----> ${concat}`; 
-      }
-      condicional_syntax[2] = true;
+        mensaje = `ERR13 ${mensaje} SIMBOLO EN ----> ${concat}`;
+      } 
+      condicional_syntax[2] = true; 
     }
     //VALOR
     else if(!condicional_syntax[3])
     {
+      console.log(arr[pib]);
+
       if(arr[pib] == "\'")
       {
         concat+= arr[pib];
@@ -423,66 +431,42 @@ function analizadorSintactico(arr)
         {
           if(agrupacion[1])
           {
-            agrupacion[2] = true;
             condicional_syntax[3] = true;
-            if( arr[pib+1] !== undefined )
-            {
-              if(arr[pib+1] == ";" )
-              {
-                terminacion = true;
-                condicional_syntax[4] = true;
-              }
-            }
-            else
-            {
-              condicional_syntax[4] = true;
-            }
+            agrupacion[2] = true;
           }
           else
           {
             esValido = false;
-            mensaje = `${mensaje} comilla simple o existe una agrupación invalida en el valor ----> ${concat}`; 
+            mensaje = `ERR14 Agrupación invalida EN ----> ${concat}`;
           }
         }
         else
         {
           agrupacion[0] = true;
-          mensaje = `${mensaje} comilla simple o existe una agrupación invalida en el valor ----> ${concat}`; 
+          pibote = arr[pib];
         }
       }
-      else if(/^[a-zA-Z0-9_. ]+$/.test(arr[pib]))
+      else if(/^[a-zA-Z0-9_\- \.]+$/.test(arr[pib]))
       {
-        concat += arr[pib];
+        concat+= arr[pib];
         agrupacion[1] = true;
-        if( arr[pib+1] !== undefined )
+
+        if(!agrupacion[0])
         {
-          if( agrupacion[0] == agrupacion[2]  )
-          {
-            condicional_syntax[3] = true;
-          }
-        }
-        else
-        {
-          agrupacion[1] = true;
           condicional_syntax[3] = true;
         }
+
       }
-      else if(arr[pib] == "\"")
+      else if( /^\"$/.test(arr[pib]) )
       {
         esValido = false;
-        mensaje = `${mensaje} comilla simple para agrupar el nombre de las columnas ----> ${concat}`; 
-      }
-      else
-      {
-        esValido = false;
-        mensaje = `${mensaje} caracter valido para el valor ----> ${concat}`; 
+        mensaje = `ERR15 Se esperaban comillas simples para el valor en ----> ${concat}`;
       }
     }
     //OPERADOR
-    else
-    {
-      if(!condicional_syntax[4])
+    else if(!condicional_syntax[4])
       {
+        console.log(arr[pib]);
         concat += " "+arr[pib]+ " " ;
         if(  /^AND$/.test(arr[pib]) || /^OR$/.test(arr[pib])  )
         {
@@ -500,32 +484,43 @@ function analizadorSintactico(arr)
         else
         {
           esValido = false;
-          mensaje = `${mensaje} caracter valido despues de  ----> ${concat}`; 
         }
       }
-    }
 
     pib++;
     count--; 
+    
   }
   pib = 0;
+
+  console.log(esValido)
+  debugger;
 
   while(pib < delete_syntax.length && esValido )
   {
     esValido = delete_syntax[pib];
-    mensaje = errorValidadorSintactico(pib) + " despues --------> " + concat;
+    mensaje = "ERR16("+ pib +")" + errorValidadorSintactico(pib) + " despues --------> " + concat;
     pib++;
-  }
-  if(!terminacion && delete_syntax.every(Boolean) )
-  {
-     if( condicional_syntax[0] && (!condicional_syntax[1] || !condicional_syntax[2]) )
-     {
-        esValido = false;
-        mensaje = `Se esperaba una condición correcta despues de ----> ${concat}  --------- \[COLUMNA\] \[SIMBOLO\] \[VALOR\]`; 
-     }     
+    
   }
 
-  if(esValido)
+  if(pib == 3 )
+  {
+    //condicional_syntax
+    // 0      1     2     3     4
+    //WHERE  COLM  SIMB  VALOR OPERA
+      if(condicional_syntax[0] && condicional_syntax[1] && condicional_syntax[2] && condicional_syntax[3] )
+      {
+          console.log("ok");
+      }  
+      else
+      {
+        esValido = false;
+        mensaje = `ERR17 Se esperaba una condición correcta despues de ----> ${concat}  --------- \[COLUMNA\] \[SIMBOLO\] \[VALOR\]`; 
+      }
+  }
+
+  if(esValido || mensaje == "-- Se esperaba un")
   {
     return `LA CONSULTA ES VALIDA.`; 
   }
@@ -538,7 +533,7 @@ function analizadorSintactico(arr)
 
 function errorValidadorSintactico(op)
 {
-  let mensaje = "se esperaba un(a) ";
+  let mensaje = "- se esperaba un(a) ";
     switch(op)
     {
       case 0: ; return `${mensaje} DELETE `
