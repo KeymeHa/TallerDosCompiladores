@@ -248,7 +248,10 @@ function analizadorSintactico(arr)
           {
             agrupacion[2] = true;
             delete_syntax[2] = true;
-            
+            if( arr[pib+1] === undefined )
+            {
+               terminacion = true; 
+            }
           }
           else
           {
@@ -282,13 +285,12 @@ function analizadorSintactico(arr)
           }
           else
           {
+            terminacion = true; 
             if( agrupacion[0] == agrupacion[2]  )
             {
               delete_syntax[2] = true;
-              
             }
-            agrupacion[1] = true;
-            
+            agrupacion[1] = true;            
           }
         }
       }
@@ -332,6 +334,7 @@ function analizadorSintactico(arr)
         agrupacion = [false,false,false];
         pibote = "";
         concat += " ";
+        terminacion = false;
       }
       else if(/;/.test(arr[pib]) && agrupacion[1]  )
       {
@@ -493,9 +496,6 @@ function analizadorSintactico(arr)
   }
   pib = 0;
 
-  console.log(esValido)
-  debugger;
-
   while(pib < delete_syntax.length && esValido )
   {
     esValido = delete_syntax[pib];
@@ -509,15 +509,19 @@ function analizadorSintactico(arr)
     //condicional_syntax
     // 0      1     2     3     4
     //WHERE  COLM  SIMB  VALOR OPERA
-      if(condicional_syntax[0] && condicional_syntax[1] && condicional_syntax[2] && condicional_syntax[3] )
+      if(!terminacion)
       {
-          console.log("ok");
-      }  
-      else
-      {
-        esValido = false;
-        mensaje = `ERR17 Se esperaba una condición correcta despues de ----> ${concat}  --------- \[COLUMNA\] \[SIMBOLO\] \[VALOR\]`; 
+        if(condicional_syntax[0] && condicional_syntax[1] && condicional_syntax[2] && condicional_syntax[3] )
+        {
+            console.log("ok");
+        }  
+        else
+        {
+          esValido = false;
+          mensaje = `ERR17 Se esperaba una condición correcta despues de ----> ${concat}  --------- \[COLUMNA\] \[SIMBOLO\] \[VALOR\]`; 
+        }
       }
+
   }
 
   if(esValido || mensaje == "-- Se esperaba un")
